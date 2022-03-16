@@ -1,96 +1,94 @@
 package com.github.fridmor;
 
-import java.io.File;
+import com.github.fridmor.algorithm.Algorithm;
+import com.github.fridmor.model.Rate;
+import com.github.fridmor.Selector.AlgorithmSelector;
+import com.github.fridmor.util.CsvReader;
+import com.github.fridmor.Selector.FileSelector;
+import com.github.fridmor.enumeration.PeriodEnum;
+import com.github.sh0nk.matplotlib4j.Plot;
+import com.github.sh0nk.matplotlib4j.PythonExecutionException;
+
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class App {
-    private static final File EUR_FILE = new File("src/main/resources/EUR_F01_02_2002_T01_02_2022.csv");
-    private static final File TRY_FILE = new File("src/main/resources/TRY_F01_02_2002_T01_02_2022.csv");
-    private static final File USD_FILE = new File("src/main/resources/USD_F01_02_2002_T01_02_2022.csv");
-    private static final File TEMP_FILE = new File("src/main/resources/temp.csv");
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        printMenu();
-        while (true) {
-            String userInput = scanner.nextLine().trim().toLowerCase();
-            if (!checkUserInput(userInput)) {
-                System.out.println("\nUse command from the list above!\n");
-                continue;
-            }
-            if (userInput.contains("exit")) {
-                break;
-            }
-            File dataFile = selectFile(userInput);
-            RateCalculator rateCalculator = new RateCalculator(dataFile, TEMP_FILE);
-            rateCalculator.updateTempFile();
-            applyCommand(userInput);
-            System.out.println();
+    public static void main(String[] args) throws PythonExecutionException, IOException {
+        Scanner sc = new Scanner(System.in);
+
+        String[] command = sc.nextLine().trim().split("\\s+");
+
+        String[] cdxArg = command[1].split(",");
+        String cmdArg = command[2];
+        String periodArg = command[3];
+        String algArg = command[5];
+        String outputArg = command.length > 6 ? command[7] : null;
+
+        // get input data
+        List<List<Rate>> rateListList = new ArrayList<>();
+        for (String cdx : cdxArg) {
+            String fileName = FileSelector.select(cdx);
+            rateListList.add(CsvReader.readFile(fileName));
         }
-        scanner.close();
-    }
 
-    public static void printMenu() {
-        System.out.println();
-        System.out.println("Available commands:");
-        System.out.println("\trate EUR|TRY|USD week");
-        System.out.println("\trate EUR|TRY|USD tomorrow");
-        System.out.println("\texit");
-        System.out.println();
-    }
+        //select algorithm
+        Algorithm algorithm = AlgorithmSelector.select(algArg);
 
-    private static boolean checkUserInput(String userInput) {
-        Pattern pattern = Pattern.compile("(rate\\s+(eur|try|usd)\\s+tomorrow)|(rate\\s+(eur|try|usd)\\s+week)|exit");
-        Matcher matcher = pattern.matcher(userInput);
-        return matcher.find();
-    }
-
-    private static File selectFile(String userInput) {
-        Pattern pattern = Pattern.compile("eur|try|usd");
-        Matcher matcher = pattern.matcher(userInput);
-        if (matcher.find()) {
-            switch (matcher.group(0)) {
-                case "eur":
-                    return EUR_FILE;
-                case "try":
-                    return TRY_FILE;
-                case "usd":
-                    return USD_FILE;
-            }
-        }
-        return null;
-    }
-
-    private static void applyCommand(String userInput) {
-        Pattern pattern = Pattern.compile("week|tomorrow");
-        Matcher matcher = pattern.matcher(userInput);
-        matcher.find();
-
-        List<List<String>> data = FileHandler.readFile(TEMP_FILE, 7);
-
-        switch (matcher.group(0)) {
+        //convert period
+        LocalDate date = null;
+        PeriodEnum period = null;
+        switch (periodArg) {
             case "tomorrow":
-                System.out.println(lineFormatter(data.get(6)));
+                date = LocalDate.parse("05.03.2022", DateTimeFormatter.ofPattern("dd.MM.yyyy")).plusDays(1);
                 break;
             case "week":
-                for (int i = data.size() - 1; i >= 0; i--) {
-                    System.out.println(lineFormatter(data.get(i)));
+            case "month":
+                period = PeriodEnum.valueOf(periodArg.toUpperCase(Locale.ROOT));
+                break;
+            default:
+                date = LocalDate.parse(periodArg, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        }
+
+        //output
+        switch (cmdArg) {
+            case "-date":
+                for (List<Rate> rateList : rateListList) {
+                    Rate outputRate = algorithm.calculateRateForDate(rateList, date);
+                    System.out.println(outputRate);
+                }
+                break;
+            case "-period":
+                switch (outputArg) {
+                    case "list":
+                        for (List<Rate> rateList : rateListList) {
+                            List<Rate> outputRateList = algorithm.calculateRateListForPeriod(rateList, period);
+                            for (Rate rate : outputRateList) {
+                                System.out.println(rate);
+                            }
+                        }
+                        break;
+                    case "graph":
+                        Plot plt = Plot.create();
+                        for (List<Rate> rateList : rateListList) {
+                            List<Rate> outputRateList = algorithm.calculateRateListForPeriod(rateList, period);
+                            List<Double> rates = outputRateList.stream()
+                                    .map(Rate::getCurs)
+                                    .map(BigDecimal::doubleValue)
+                                    .collect(Collectors.toList());
+                            plt.plot().add(rates);
+                        }
+                        plt.show();
+                        break;
                 }
                 break;
         }
-    }
-
-    private static String lineFormatter(List<String> line) {
-        DateTimeFormatter inputDateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        DateTimeFormatter outputDateFormat = DateTimeFormatter.ofPattern("E dd.MM.yyyy");
-
-        LocalDate date = LocalDate.parse(line.get(0), inputDateFormat);
-        double rate = Double.parseDouble(line.get(1).replace(',', '.'));
-        return "\t" + outputDateFormat.format(date) + " - " + String.format("%.2f", rate);
     }
 }
