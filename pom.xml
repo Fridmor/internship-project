@@ -56,7 +56,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com/github/fridmor/telegram/BotApp.java</mainClass>
+                            <mainClass>com.github.fridmor.telegram.BotApp</mainClass>
                         </manifest>
                     </archive>
                     <!--Ignoring postfix jar-with-dependencies-->
