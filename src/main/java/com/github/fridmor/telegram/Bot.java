@@ -1,23 +1,26 @@
 package com.github.fridmor.telegram;
 
-import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
+import com.github.fridmor.util.CommandHandler;
+import com.github.sh0nk.matplotlib4j.PythonExecutionException;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-public class Bot extends TelegramLongPollingCommandBot {
+import java.io.File;
+import java.io.IOException;
+
+public class Bot extends TelegramLongPollingBot {
+
     private final String BOT_NAME;
     private final String BOT_TOKEN;
 
-    private final NonCommand nonCommand;
-
     public Bot(String botName, String botToken) {
-        super();
         this.BOT_NAME = botName;
         this.BOT_TOKEN = botToken;
-        this.nonCommand = new NonCommand();
     }
 
     @Override
@@ -31,28 +34,31 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     @Override
-    public void processNonCommandUpdate(Update update) {
-        Message msg = update.getMessage();
-        Long chatId = msg.getChatId();
-        String userName = getUserName(msg);
-
-        String answer = nonCommand.nonCommandExecute(chatId, userName, msg.getText());
-        setAnswer(chatId, userName, answer);
-    }
-
-    private String getUserName(Message msg) {
-        User user = msg.getFrom();
-        String userName = user.getUserName();
-        return (userName != null) ? userName : String.format("%s %s", user.getLastName(), user.getFirstName());
-    }
-
-    private void setAnswer(Long chatId, String userName, String text) {
-        SendMessage answer = new SendMessage();
-        answer.setText(text);
-        answer.setChatId(chatId.toString());
+    public void onUpdateReceived(Update update) {
         try {
-            execute(answer);
-        } catch (TelegramApiException e) {
+            if (update.hasMessage()) {
+                Message message = update.getMessage();
+                if (message.hasText() || message.hasLocation()) {
+                    handleIncomingMessage(message);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("upsss");
         }
+    }
+
+    private void handleIncomingMessage(Message message) throws TelegramApiException, PythonExecutionException, IOException {
+//        File file = CommandHandler.commandHandle(message.getText());
+//        SendPhoto sendPhoto = new SendPhoto();
+//        sendPhoto.setChatId(message.getChatId().toString());
+//        sendPhoto.setPhoto(new InputFile(file));
+//        sendPhoto.setCaption("Graph");
+
+
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(message.getChatId().toString());
+        sendMessage.setText(message.getText());
+
+        execute(sendMessage);
     }
 }
