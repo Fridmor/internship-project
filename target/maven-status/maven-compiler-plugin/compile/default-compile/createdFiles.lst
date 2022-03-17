@@ -6,7 +6,6 @@ com\github\fridmor\algorithm\MoonAlgorithm.class
 com\github\fridmor\model\Rate.class
 com\github\fridmor\util\Temp.class
 com\github\fridmor\util\CsvReader.class
-com\github\fridmor\telegram\NonCommand.class
 com\github\fridmor\telegram\Bot.class
 com\github\fridmor\Selector\AlgorithmSelector.class
 com\github\fridmor\algorithm\Algorithm.class

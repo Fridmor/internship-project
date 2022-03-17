@@ -8,6 +8,7 @@ import com.github.fridmor.enumeration.PeriodEnum;
 import com.github.sh0nk.matplotlib4j.Plot;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class Temp {
 
-    public static void temp() throws PythonExecutionException, IOException {
+    public static void main(String[] args) throws PythonExecutionException, IOException {
         Scanner sc = new Scanner(System.in);
 
         String[] command = sc.nextLine().trim().split("\\s+");
@@ -84,7 +85,8 @@ public class Temp {
                                     .collect(Collectors.toList());
                             plt.plot().add(rates);
                         }
-                        plt.show();
+                        plt.savefig("graph");
+                        plt.executeSilently();
                         break;
                 }
                 break;
