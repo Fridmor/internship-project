@@ -1,5 +1,6 @@
 # Default ignored files
 .idea/*
+graph.png
+# Project exclude paths
 /logs/
 /target/
-graph.png
