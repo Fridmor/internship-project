@@ -61,6 +61,7 @@ public class Bot extends TelegramLongPollingBot {
                 execute(sendPhoto);
             } else {
                 sendMessage.setText(commandExecutor.getOutput());
+                execute(sendMessage);
             }
         } catch (IllegalArgumentException e) {
             sendMessage.setText(e.getMessage());

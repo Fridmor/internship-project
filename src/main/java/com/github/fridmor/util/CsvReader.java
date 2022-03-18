@@ -39,7 +39,7 @@ public class CsvReader {
     }
 
     private static Rate parseValues(String[] values) {
-        int nominal = Integer.parseInt(values[0]);
+        int nominal = Integer.parseInt(values[0].replaceAll("[.]", ""));
         LocalDate date = LocalDate.parse(values[1], DATE_FORMAT);
         BigDecimal curs = new BigDecimal(values[2].replace(',', '.'));
         String cdx = values[3];

@@ -128,6 +128,8 @@ public class CommandHandler {
                             "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
                 }
             }
+            return "date_arg error: wrong date argument for pattern using -date\n" +
+                    "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
         }
         if (cmdArgs.length == 8 && !periodArg.equals("week") && !periodArg.equals("month")) {
             return "period_arg error: wrong period argument for pattern using -period\n" +

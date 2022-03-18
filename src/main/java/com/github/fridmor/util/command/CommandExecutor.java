@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -101,15 +102,22 @@ public class CommandExecutor {
 
     private void outputGraph(List<List<Rate>> rateListList, Algorithm algorithm, PeriodEnum period) throws PythonExecutionException, IOException {
         Plot plt = Plot.create();
+        List<Number> days = new ArrayList<>();
+        for (int i = 0; i < period.getDays(); i++) {
+            days.add(i + 1);
+        }
         for (List<Rate> rateList : rateListList) {
             List<Rate> outputRateList = algorithm.calculateRateListForPeriod(rateList, period);
             List<Double> rates = outputRateList.stream()
                     .map(Rate::getCurs)
                     .map(BigDecimal::doubleValue)
                     .collect(Collectors.toList());
-            plt.plot().add(rates);
+            plt.plot().add(days, rates);
         }
-        plt.savefig("graph.png");
+        plt.xlabel("Days");
+        plt.ylabel("Rate");
+        plt.title("Graph");
+        plt.savefig("graph.png").dpi(200);
         plt.executeSilently();
         graph = new File("graph.png");
     }
