@@ -1,8 +1,9 @@
 package com.github.fridmor.algorithm;
 
+import com.github.fridmor.enumeration.PeriodEnum;
 import com.github.fridmor.model.Rate;
 import com.github.fridmor.util.LinearRegression;
-import com.github.fridmor.enumeration.PeriodEnum;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,10 +11,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class LinearAlgorithm implements Algorithm {
-
-    public LinearAlgorithm() {
-    }
+@NoArgsConstructor
+public class LinearAlgorithm extends Algorithm {
+    private static final int DAYS_AMOUNT_TO_ITERATE = 30;
 
     @Override
     public Rate calculateRateForDate(List<Rate> rateList, LocalDate date) {
@@ -25,16 +25,20 @@ public class LinearAlgorithm implements Algorithm {
             dateArray[i] = i + 1;
             cursArray[i] = rateListLastMonth.get(i).getCurs().doubleValue();
         }
-        Rate lastRate = rateList.get(0);
-        int i = 0;
-        while (rateList.stream().noneMatch(r -> r.getDate().isEqual(date) || r.getDate().isAfter(date))) {
+        Rate lastRate = rateList.get(FIRST_ELEMENT);
+        int i = 1;
+        while (rateList.stream()
+                .allMatch(r -> r.getDate().isBefore(date))) {
             LinearRegression lr = new LinearRegression(dateArray, cursArray);
-            BigDecimal curs = BigDecimal.valueOf(lr.predict(dateArray[rateListLastMonth.size() - 1] + ++i));
-            rateList.add(0, new Rate(lastRate.getNominal(), lastRate.getDate().plusDays(i), curs, lastRate.getCdx()));
+            double lrPrediction = lr.predict(dateArray[rateListLastMonth.size() - 1] + i);
+            BigDecimal curs = BigDecimal.valueOf(lrPrediction);
+            rateList.add(new Rate(lastRate.getNominal(), lastRate.getDate().plusDays(i), curs, lastRate.getCdx()));
+            i++;
         }
         return rateList.stream()
                 .filter(r -> r.getDate().isEqual(date))
-                .findFirst().orElseThrow();
+                .findFirst()
+                .orElseThrow();
     }
 
     @Override
@@ -48,20 +52,24 @@ public class LinearAlgorithm implements Algorithm {
 
     private List<Rate> getRateListForLastMonth(List<Rate> rateList) {
         List<Rate> rateListForLastMonth = new ArrayList<>();
-        Rate lastRate = rateList.get(0);
+        Rate lastRate = rateList.get(FIRST_ELEMENT);
         LocalDate lastDate = lastRate.getDate();
         int i = 0;
-        while (i < 30) {
+        while (i < DAYS_AMOUNT_TO_ITERATE) {
             LocalDate nextDate = lastDate.minusDays(i);
-            if (rateList.stream().anyMatch(r -> r.getDate().isEqual(nextDate))) {
+            if (rateList.stream()
+                    .anyMatch(r -> r.getDate().isEqual(nextDate))) {
                 rateListForLastMonth.add(rateList.stream()
                         .filter(r -> r.getDate().isEqual(nextDate))
-                        .findFirst().orElseThrow());
+                        .findFirst()
+                        .orElseThrow());
 
             } else {
                 BigDecimal curs = (rateList.stream()
                         .filter(r -> r.getDate().isBefore(nextDate))
-                        .findFirst().orElseThrow().getCurs());
+                        .findFirst()
+                        .orElseThrow()
+                        .getCurs());
                 rateListForLastMonth.add(new Rate(lastRate.getNominal(), nextDate, curs, lastRate.getCdx()));
             }
             i++;

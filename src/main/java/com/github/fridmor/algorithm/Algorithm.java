@@ -1,14 +1,15 @@
 package com.github.fridmor.algorithm;
 
-import com.github.fridmor.model.Rate;
 import com.github.fridmor.enumeration.PeriodEnum;
+import com.github.fridmor.model.Rate;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public interface Algorithm {
+public abstract class Algorithm {
+    protected final int FIRST_ELEMENT = 0;
 
-    Rate calculateRateForDate(List<Rate> rateList, LocalDate date);
+    public abstract Rate calculateRateForDate(List<Rate> rateList, LocalDate date);
 
-    List<Rate> calculateRateListForPeriod(List<Rate> rateList, PeriodEnum period);
+    public abstract List<Rate> calculateRateListForPeriod(List<Rate> rateList, PeriodEnum period);
 }

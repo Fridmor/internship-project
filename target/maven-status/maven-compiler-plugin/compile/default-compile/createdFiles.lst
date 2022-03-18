@@ -8,9 +8,8 @@ com\github\fridmor\enumeration\AlgorithmEnum.class
 com\github\fridmor\algorithm\MoonAlgorithm.class
 com\github\fridmor\model\Rate.class
 com\github\fridmor\util\command\CommandExecutor.class
+com\github\fridmor\BotApp.class
 com\github\fridmor\util\CsvReader.class
-com\github\fridmor\HelloWorld.class
 com\github\fridmor\telegram\Bot.class
 com\github\fridmor\algorithm\Algorithm.class
-com\github\fridmor\telegram\BotApp.class
 com\github\fridmor\util\FullMoonCalendar.class

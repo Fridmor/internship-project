@@ -8,11 +8,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class MoonAlgorithm implements Algorithm {
+public class MoonAlgorithm extends Algorithm {
 
     public MoonAlgorithm() {
     }
@@ -22,19 +23,22 @@ public class MoonAlgorithm implements Algorithm {
         List<LocalDate> fullMoonDateList = FullMoonCalendar.getFullMoonDates(date.getYear());
         LocalDate ClosestFullMoonDate = fullMoonDateList.stream()
                 .filter(d -> d.isBefore(date))
-                .findFirst().orElseThrow();
+                .findFirst()
+                .orElseThrow();
         while (rateList.stream()
-                .noneMatch(r -> r.getDate().isAfter(ClosestFullMoonDate) ||
-                        r.getDate().isEqual(ClosestFullMoonDate))) {
-            Rate lastRate = rateList.get(0);
+                .allMatch(r -> r.getDate().isBefore(ClosestFullMoonDate))) {
+            Rate lastRate = rateList.get(FIRST_ELEMENT);
             LocalDate nextFullMoonDate = fullMoonDateList.stream()
-                    .sorted().filter(d -> d.isAfter(lastRate.getDate()))
-                    .findFirst().orElseThrow();
+                    .sorted()
+                    .filter(d -> d.isAfter(lastRate.getDate()))
+                    .findFirst()
+                    .orElseThrow();
             BigDecimal nextFullMoonCurs = getAvgCurs(rateList, fullMoonDateList, nextFullMoonDate);
             Rate nextRate = new Rate(lastRate.getNominal(), nextFullMoonDate, nextFullMoonCurs, lastRate.getCdx());
-            rateList.add(0, nextRate);
+            rateList.add(nextRate);
+            rateList.sort(Comparator.comparing(Rate::getDate).reversed());
         }
-        Rate lastRate = rateList.get(0);
+        Rate lastRate = rateList.get(FIRST_ELEMENT);
         BigDecimal curs = getAvgCurs(rateList, fullMoonDateList, date);
         return new Rate(lastRate.getNominal(), date, curs, lastRate.getCdx());
     }
@@ -58,13 +62,14 @@ public class MoonAlgorithm implements Algorithm {
     private BigDecimal getAvgCurs(List<Rate> rateList, List<LocalDate> fullMoonDateList, LocalDate date) {
         List<LocalDate> previousFullMoonDateList = fullMoonDateList.stream()
                 .filter(d -> d.isBefore(date))
-                .limit(3).collect(Collectors.toList());
+                .limit(3)
+                .collect(Collectors.toList());
         List<BigDecimal> cursList = new ArrayList<>();
         for (LocalDate previousFullMoonDate : previousFullMoonDateList) {
             Rate rate = rateList.stream()
-                    .filter(r -> r.getDate().isEqual(previousFullMoonDate) ||
-                            r.getDate().isBefore(previousFullMoonDate))
-                    .findFirst().orElseThrow();
+                    .filter(r -> !r.getDate().isAfter(previousFullMoonDate))
+                    .findFirst()
+                    .orElseThrow();
             cursList.add(rate.getCurs());
         }
         BigDecimal divisor = new BigDecimal(cursList.size());

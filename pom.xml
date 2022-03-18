@@ -13,8 +13,13 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <org.projectlombok.version>1.18.22</org.projectlombok.version>
         <telegram.version>5.7.1</telegram.version>
+        <org.projectlombok.version>1.18.22</org.projectlombok.version>
+        <com.github.sh0nk.version>0.5.0</com.github.sh0nk.version>
+        <ch.qos.logback.version>1.2.11</ch.qos.logback.version>
+        <org.apache.maven.plugins.version>2.4.1</org.apache.maven.plugins.version>
+        <org.apache.maven.plugins.version>2.4.1</org.apache.maven.plugins.version>
+
     </properties>
 
     <dependencies>
@@ -40,41 +45,29 @@
         <dependency>
             <groupId>com.github.sh0nk</groupId>
             <artifactId>matplotlib4j</artifactId>
-            <version>0.5.0</version>
+            <version>${com.github.sh0nk.version}</version>
         </dependency>
         <!-- Logback -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.11</version>
+            <version>${ch.qos.logback.version}</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-dependency-plugin</artifactId>-->
-<!--                <version>3.0.1</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>copy-dependencies</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals><goal>copy-dependencies</goal></goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4.1</version>
+                <version>${org.apache.maven.plugins.version}</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.github.fridmor.telegram.BotApp</mainClass>
+                            <mainClass>com.github.fridmor.BotApp</mainClass>
                         </manifest>
                     </archive>
                     <!--Ignoring postfix jar-with-dependencies-->

@@ -7,7 +7,9 @@ import com.github.fridmor.algorithm.MoonAlgorithm;
 import lombok.Getter;
 
 public enum AlgorithmEnum {
-    ACTUAL(new ActualAlgorithm()), MOON(new MoonAlgorithm()), LINEAR(new LinearAlgorithm());
+    ACTUAL(new ActualAlgorithm()),
+    MOON(new MoonAlgorithm()),
+    LINEAR(new LinearAlgorithm());
 
     @Getter
     private final Algorithm algorithm;

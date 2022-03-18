@@ -27,9 +27,11 @@
     </appender>
 
     <logger name="logback.info" level="INFO">
+        <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </logger>
     <logger name="logback.debug" level="DEBUG">
+        <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </logger>
 

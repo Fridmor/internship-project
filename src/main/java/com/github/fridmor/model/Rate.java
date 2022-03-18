@@ -3,11 +3,13 @@ package com.github.fridmor.model;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Getter
 public class Rate {
+    private final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("E dd.MM.yyyy");
 
     private final int nominal;
     private final LocalDate date;
@@ -23,6 +25,6 @@ public class Rate {
 
     @Override
     public String toString() {
-        return date.format(DateTimeFormatter.ofPattern("E dd.MM.yyyy")) + " - " + String.format("%.2f", curs);
+        return date.format(DATE_FORMAT) + " - " + String.format("%.2f", curs);
     }
 }

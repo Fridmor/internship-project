@@ -3,7 +3,8 @@ package com.github.fridmor.enumeration;
 import lombok.Getter;
 
 public enum PeriodEnum {
-    WEEK(7), MONTH(30);
+    WEEK(7),
+    MONTH(30);
 
     @Getter
     private final int days;

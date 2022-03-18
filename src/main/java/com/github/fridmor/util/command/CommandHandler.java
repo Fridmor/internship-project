@@ -120,16 +120,16 @@ public class CommandHandler {
 
     private String periodArgValidation() {
         if (cmdArgs.length == 6 && !periodArg.equals("tomorrow")) {
-            if (!periodArg.equals("week") && !periodArg.equals("month")) {
-                try {
-                    LocalDate.parse(periodArg, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-                } catch (DateTimeParseException e) {
-                    return "date_arg error: wrong date argument for pattern using -date\n" +
-                            "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
-                }
+            if (periodArg.equals("week") || periodArg.equals("month")) {
+                return "date_arg error: wrong date argument for pattern using -date\n" +
+                        "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
             }
-            return "date_arg error: wrong date argument for pattern using -date\n" +
-                    "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
+            try {
+                LocalDate.parse(periodArg, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            } catch (DateTimeParseException e) {
+                return "date_arg error: wrong date argument for pattern using -date\n" +
+                        "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
+            }
         }
         if (cmdArgs.length == 8 && !periodArg.equals("week") && !periodArg.equals("month")) {
             return "period_arg error: wrong period argument for pattern using -period\n" +
