@@ -1,6 +1,7 @@
 package com.github.fridmor.telegram;
 
-import com.github.fridmor.util.CommandHandler;
+import com.github.fridmor.util.command.CommandExecutor;
+import com.github.fridmor.util.command.CommandHandler;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -10,7 +11,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.File;
 import java.io.IOException;
 
 public class Bot extends TelegramLongPollingBot {
@@ -48,17 +48,24 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void handleIncomingMessage(Message message) throws TelegramApiException, PythonExecutionException, IOException {
-//        File file = CommandHandler.commandHandle(message.getText());
-//        SendPhoto sendPhoto = new SendPhoto();
-//        sendPhoto.setChatId(message.getChatId().toString());
-//        sendPhoto.setPhoto(new InputFile(file));
-//        sendPhoto.setCaption("Graph");
-
-
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText(message.getText());
+        try {
+            CommandHandler commandHandler = new CommandHandler(message.getText());
+            CommandExecutor commandExecutor = new CommandExecutor(commandHandler);
+            commandExecutor.execute();
+            if (commandHandler.getOutputArg().equals("graph")) {
+                SendPhoto sendPhoto = new SendPhoto();
+                sendPhoto.setChatId(message.getChatId().toString());
+                sendPhoto.setPhoto(new InputFile(commandExecutor.getGraph()));
+                execute(sendPhoto);
+            } else {
+                sendMessage.setText(commandExecutor.getOutput());
+            }
+        } catch (IllegalArgumentException e) {
+            sendMessage.setText(e.getMessage());
+            execute(sendMessage);
+        }
 
-        execute(sendMessage);
     }
 }
