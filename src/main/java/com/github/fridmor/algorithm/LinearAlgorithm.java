@@ -25,20 +25,17 @@ public class LinearAlgorithm extends Algorithm {
             dateArray[i] = i + 1;
             cursArray[i] = rateListLastMonth.get(i).getCurs().doubleValue();
         }
-        Rate lastRate = rateList.get(FIRST_ELEMENT);
+        Rate lastRate = getLastRate(rateList);
         int i = 1;
-        while (rateList.stream()
-                .allMatch(r -> r.getDate().isBefore(date))) {
+        while (lastRate.getDate().isBefore(date)) {
             LinearRegression lr = new LinearRegression(dateArray, cursArray);
             double lrPrediction = lr.predict(dateArray[rateListLastMonth.size() - 1] + i);
             BigDecimal curs = BigDecimal.valueOf(lrPrediction);
-            rateList.add(new Rate(lastRate.getNominal(), lastRate.getDate().plusDays(i), curs, lastRate.getCdx()));
+            lastRate = new Rate(lastRate.getNominal(), lastRate.getDate().plusDays(i), curs, lastRate.getCdx());
+            rateList.add(lastRate);
             i++;
         }
-        return rateList.stream()
-                .filter(r -> r.getDate().isEqual(date))
-                .findFirst()
-                .orElseThrow();
+        return lastRate;
     }
 
     @Override
@@ -52,27 +49,25 @@ public class LinearAlgorithm extends Algorithm {
 
     private List<Rate> getRateListForLastMonth(List<Rate> rateList) {
         List<Rate> rateListForLastMonth = new ArrayList<>();
-        Rate lastRate = rateList.get(FIRST_ELEMENT);
+        Rate lastRate = getLastRate(rateList);
         LocalDate lastDate = lastRate.getDate();
-        int i = 0;
-        while (i < DAYS_AMOUNT_TO_ITERATE) {
-            LocalDate nextDate = lastDate.minusDays(i);
+        for (int i = 0; i < DAYS_AMOUNT_TO_ITERATE; i++) {
+            LocalDate previousDate = lastDate.minusDays(i);
             if (rateList.stream()
-                    .anyMatch(r -> r.getDate().isEqual(nextDate))) {
+                    .anyMatch(r -> r.getDate().isEqual(previousDate))) {
                 rateListForLastMonth.add(rateList.stream()
-                        .filter(r -> r.getDate().isEqual(nextDate))
-                        .findFirst()
+                        .filter(r -> r.getDate().isEqual(previousDate))
+                        .max(Comparator.comparing(Rate::getDate))
                         .orElseThrow());
 
             } else {
                 BigDecimal curs = (rateList.stream()
-                        .filter(r -> r.getDate().isBefore(nextDate))
-                        .findFirst()
+                        .filter(r -> r.getDate().isBefore(previousDate))
+                        .max(Comparator.comparing(Rate::getDate))
                         .orElseThrow()
                         .getCurs());
-                rateListForLastMonth.add(new Rate(lastRate.getNominal(), nextDate, curs, lastRate.getCdx()));
+                rateListForLastMonth.add(new Rate(lastRate.getNominal(), previousDate, curs, lastRate.getCdx()));
             }
-            i++;
         }
         return rateListForLastMonth;
     }

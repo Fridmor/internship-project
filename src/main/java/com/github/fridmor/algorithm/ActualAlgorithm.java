@@ -1,39 +1,34 @@
 package com.github.fridmor.algorithm;
 
-import com.github.fridmor.model.Rate;
 import com.github.fridmor.enumeration.PeriodEnum;
+import com.github.fridmor.model.Rate;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @NoArgsConstructor
 public class ActualAlgorithm extends Algorithm {
 
-    private List<Rate> Data;
-
     @Override
     public Rate calculateRateForDate(List<Rate> rateList, LocalDate date) {
-        Rate lastRate = rateList.get(FIRST_ELEMENT);
-
+        Rate lastRate = getLastRate(rateList);
         if (date.minusYears(2).isAfter(lastRate.getDate())) {
-            throw new IllegalArgumentException("not enough data");
+            throw new IllegalArgumentException("the last rate entry is more than two years before the requested date");
         }
-
         Rate rateTwoYearsBefore = rateList.stream()
                 .filter(r -> !r.getDate().isAfter(date.minusYears(2)))
-                .findFirst()
+                .max(Comparator.comparing(Rate::getDate))
                 .orElseThrow();
-
         Rate rateThreeYearsBefore = rateList.stream()
                 .filter(r -> !r.getDate().isAfter(date.minusYears(3)))
-                .findFirst()
+                .max(Comparator.comparing(Rate::getDate))
                 .orElseThrow();
-
         BigDecimal newCurs = rateTwoYearsBefore.getCurs().add(rateThreeYearsBefore.getCurs());
-
-        return new Rate(lastRate.getNominal(), date,  newCurs, lastRate.getCdx());
+        return new Rate(lastRate.getNominal(), date, newCurs, lastRate.getCdx());
     }
 
     @Override

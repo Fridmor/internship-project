@@ -3,8 +3,8 @@ package com.github.fridmor.telegram;
 import com.github.fridmor.util.command.CommandExecutor;
 import com.github.fridmor.util.command.CommandHandler;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -15,17 +15,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 
+@Slf4j(topic = "logback.debug")
+@AllArgsConstructor
 public class Bot extends TelegramLongPollingBot {
-    private static final Logger LOG = LoggerFactory.getLogger(Bot.class);
-    private static final String LOG_TAG = "BOT";
-
     private final String BOT_NAME;
     private final String BOT_TOKEN;
-
-    public Bot(String botName, String botToken) {
-        this.BOT_NAME = botName;
-        this.BOT_TOKEN = botToken;
-    }
 
     @Override
     public String getBotUsername() {
@@ -47,7 +41,7 @@ public class Bot extends TelegramLongPollingBot {
                     }
                 }
             } catch (Exception e) {
-                LOG.error(LOG_TAG, e);
+                log.error(e.getMessage());
             }
     }
 
@@ -57,7 +51,7 @@ public class Bot extends TelegramLongPollingBot {
         try {
             CommandHandler commandHandler = new CommandHandler(message.getText());
             CommandExecutor commandExecutor = new CommandExecutor(commandHandler);
-            if (commandHandler.getOutputArg().equals("graph")) {
+            if (commandHandler.getOutputValue().equals("graph")) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setChatId(message.getChatId().toString());
                 sendPhoto.setPhoto(new InputFile(commandExecutor.commandExecuteWithGraphReturn()));

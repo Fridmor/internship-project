@@ -7,8 +7,8 @@ import lombok.Getter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 
 public class CommandHandler {
@@ -19,156 +19,154 @@ public class CommandHandler {
     private static final String EXAMPLE_WITH_PERIOD_WEEK_LIST = "rate EUR -period week -alg linear -output list";
     private static final String EXAMPLE_WITH_PERIOD_MONTH_GRAPH = "rate BGN,AMD -period month -alg moon -output graph";
 
+    private static final int DEFAULT_CMD_SIZE = 6;
+    private static final int EXTENDED_CMD_SIZE = 8;
+
+    private static final int MAIN_CMD_IDX = 0;
+    private static final int CDX_VALUES_IDX = 1;
+    private static final int PERIOD_ARG_IDX = 2;
+    private static final int PERIOD_VALUE_IDX = 3;
+    private static final int ALGORITHM_ARG_IDX = 4;
+    private static final int ALGORITHM_VALUE_IDX = 5;
+    private static final int OUTPUT_ARG_IDX = 6;
+    private static final int OUTPUT_VALUE_IDX = 7;
+
     private final String[] cmdArgs;
-    private String coreCmd;
-    @Getter
-    private String[] cdxArgs;
-    @Getter
-    private String periodCmd;
-    @Getter
-    private String periodArg;
-    private String algCmd;
-    @Getter
+    private String mainCmd;
+    @Getter private String[] cdxValues;
+    @Getter private String periodArg;
+    @Getter private String periodValue;
     private String algArg;
-    private String outputCmd;
-    @Getter
+    @Getter private String algValue;
     private String outputArg;
+    @Getter private String outputValue;
 
     public CommandHandler(String command) {
         cmdArgs = command.trim().split("\\s+");
-        commandValidation();
+        getErrorIfCommandInvalid();
     }
 
-    private void commandValidation() {
+    private void getErrorIfCommandInvalid() {
         String errorDefault = "the command must match the pattern:";
         String errorDate = "" +
-                "\tpattern using -date command: " + PATTERN_WITH_DATE + "\n" +
-                "\t\texamples:\n" +
-                "\t\t\t" + EXAMPLE_WITH_DATE_TOMORROW + "\n" +
-                "\t\t\t" + EXAMPLE_WITH_DATE_SPECIFIC_DATE;
+                " pattern using -date command:\n" +
+                "  " + PATTERN_WITH_DATE + "\n" +
+                "   examples:\n" +
+                "    " + EXAMPLE_WITH_DATE_TOMORROW + "\n" +
+                "    " + EXAMPLE_WITH_DATE_SPECIFIC_DATE;
         String errorPeriod = "" +
-                "\tpattern using -period command: " + PATTERN_WITH_PERIOD + "\n" +
-                "\t\texamples:\n" +
-                "\t\t\t" + EXAMPLE_WITH_PERIOD_WEEK_LIST + "\n" +
-                "\t\t\t" + EXAMPLE_WITH_PERIOD_MONTH_GRAPH;
+                " pattern using -period command:\n" +
+                "  " + PATTERN_WITH_PERIOD + "\n" +
+                "   examples:\n" +
+                "    " + EXAMPLE_WITH_PERIOD_WEEK_LIST + "\n" +
+                "    " + EXAMPLE_WITH_PERIOD_MONTH_GRAPH;
 
-        if (cmdArgs.length != 6 && cmdArgs.length != 8) {
+        if (cmdArgs.length != DEFAULT_CMD_SIZE && cmdArgs.length != EXTENDED_CMD_SIZE) {
             throw new IllegalArgumentException(errorDefault + "\n" + errorDate + "\n" + errorPeriod);
         }
 
-        coreCmd = cmdArgs[0];
-        cdxArgs = cmdArgs[1].split(",");
-        periodCmd = cmdArgs[2];
-        periodArg = cmdArgs[3];
-        algCmd = cmdArgs[4];
-        algArg = cmdArgs[5];
-        outputCmd = cmdArgs.length == 8 ? cmdArgs[6] : "";
-        outputArg = cmdArgs.length == 8 ? cmdArgs[7] : "";
-
+        mainCmd = cmdArgs[MAIN_CMD_IDX];
+        cdxValues = cmdArgs[CDX_VALUES_IDX].split(",");
+        periodArg = cmdArgs[PERIOD_ARG_IDX];
+        periodValue = cmdArgs[PERIOD_VALUE_IDX];
+        algArg = cmdArgs[ALGORITHM_ARG_IDX];
+        algValue = cmdArgs[ALGORITHM_VALUE_IDX];
+        outputArg = cmdArgs.length == EXTENDED_CMD_SIZE ? cmdArgs[OUTPUT_ARG_IDX] : "";
+        outputValue = cmdArgs.length == EXTENDED_CMD_SIZE ? cmdArgs[OUTPUT_VALUE_IDX] : "";
 
         StringBuilder sb = new StringBuilder();
-        sb.append(coreCmdValidation());
-        sb.append(cdxArgsValidation());
-        sb.append(periodCmdValidation());
-        sb.append(periodArgValidation());
-        sb.append(algCmdValidation());
-        sb.append(algArgValidation());
-        sb.append(outputCmdValidation());
-        sb.append(outputArgValidation());
+        sb.append(getErrorIfMainCmdInvalid());
+        sb.append(getErrorIfCdxArgsInvalid());
+        sb.append(getErrorIfPeriodCmdInvalid());
+        sb.append(getErrorIfPeriodArgInvalid());
+        sb.append(getErrorIfAlgCmdInvalid());
+        sb.append(getErrorIfAlgArgInvalid());
+        sb.append(getErrorIfOutputCmdInvalid());
+        sb.append(getErrorIfOutputArgInvalid());
 
-        if (sb.toString().length() > 0) {
+        if (!sb.toString().isEmpty()) {
             throw new IllegalArgumentException(sb.toString());
         }
     }
 
-    private String coreCmdValidation() {
-        String error = "rate command error: must be rate\n";
-        if (!coreCmd.equals("rate")) {
-            return error;
+    private String getErrorIfMainCmdInvalid() {
+        if (!mainCmd.equals("rate")) {
+            return "rate command error: must be rate\n";
         }
         return "";
     }
 
-    private String cdxArgsValidation() {
-        try {
-            if (cmdArgs.length == 6 && !(cdxArgs.length == 1)) {
-                return "cdx_arg error: for pattern using -date you can use only one currency\n";
+    private String getErrorIfCdxArgsInvalid() {
+        if (cmdArgs.length == DEFAULT_CMD_SIZE && !(cdxValues.length == 1)) {
+            return "cdx_arg error: for pattern using -date you can use only one currency\n";
+        }
+        Set<String> cdxSet = new HashSet<>();
+        for (String cdx : cdxValues) {
+            if (Arrays.stream(CdxEnum.values()).noneMatch(e -> e.name().equals(cdx))) {
+                return "cdx_arg error: wrong currency name\n" +
+                        "\tavailable currencies: AMD,BGN,EUR,TRY,USD\n";
+            } else if (!cdxSet.add(cdx)) {
+                return "cdx_arg error: currencies must be unique\n";
             }
-            Set<String> cdxSet = new HashSet<>();
-            for (String cdx : cdxArgs) {
-                CdxEnum.valueOf(cdx.toUpperCase(Locale.ROOT));
-                if (!cdxSet.add(cdx)) {
-                    return "cdx_arg error: currencies must be unique\n";
-                }
-            }
-        } catch (IllegalArgumentException e) {
-            return "cdx_arg error: wrong currency name\n" +
-                    "\tavailable currencies: AMD,BGN,EUR,TRY,USD\n";
         }
         return "";
     }
 
-    private String periodCmdValidation() {
-        if (cmdArgs.length == 6 && !periodCmd.equals("-date")) {
+    private String getErrorIfPeriodCmdInvalid() {
+        if (cmdArgs.length == DEFAULT_CMD_SIZE && !periodArg.equals("-date")) {
             return "-date command error: wrong period command for pattern using -date\n";
         }
-        if (cmdArgs.length == 8 && !periodCmd.equals("-period")) {
+        if (cmdArgs.length == EXTENDED_CMD_SIZE && !periodArg.equals("-period")) {
             return "-period command error: wrong period command for pattern using -period\n";
         }
         return "";
     }
 
-    private String periodArgValidation() {
-        if (cmdArgs.length == 6 && !periodArg.equals("tomorrow")) {
-            if (periodArg.equals("week") || periodArg.equals("month")) {
-                return "date_arg error: wrong date argument for pattern using -date\n" +
-                        "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
-            }
+    private String getErrorIfPeriodArgInvalid() {
+        if (cmdArgs.length == DEFAULT_CMD_SIZE && !periodValue.equals("tomorrow")) {
             try {
-                LocalDate.parse(periodArg, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+                LocalDate.parse(periodValue, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
             } catch (DateTimeParseException e) {
                 return "date_arg error: wrong date argument for pattern using -date\n" +
                         "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
             }
         }
-        if (cmdArgs.length == 8 && !periodArg.equals("week") && !periodArg.equals("month")) {
+        if (cmdArgs.length == EXTENDED_CMD_SIZE && !periodValue.matches("week|month")) {
             return "period_arg error: wrong period argument for pattern using -period\n" +
                     "\tavailable period argument: week, month\n";
         }
         return "";
     }
 
-    private String algCmdValidation() {
-        if (!algCmd.equals("-alg")) {
+    private String getErrorIfAlgCmdInvalid() {
+        if (!algArg.equals("-alg")) {
             return "-alg command error: must be -alg\n";
         }
         return "";
     }
 
-    private String algArgValidation() {
-        try {
-            AlgorithmEnum.valueOf(algArg.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
+    private String getErrorIfAlgArgInvalid() {
+        if (Arrays.stream(AlgorithmEnum.values()).noneMatch(e -> e.name().equals(algValue.toUpperCase()))) {
             return "alg_arg error: wrong algorithm name\n" +
                     "\tavailable algorithms: actual, moon, linear\n";
         }
         return "";
     }
 
-    private String outputCmdValidation() {
-        if (cmdArgs.length == 8 && !outputCmd.equals("-output")) {
+    private String getErrorIfOutputCmdInvalid() {
+        if (cmdArgs.length == EXTENDED_CMD_SIZE && !outputArg.equals("-output")) {
             return "-output command error: must be -output\n";
         }
         return "";
     }
 
-    private String outputArgValidation() {
-        if (cmdArgs.length == 8) {
-            if (!outputArg.equals("list") && !outputArg.equals("graph")) {
+    private String getErrorIfOutputArgInvalid() {
+        if (cmdArgs.length == EXTENDED_CMD_SIZE) {
+            if (!outputValue.matches("list|graph")) {
                 return "output_arg error: wrong output argument\n" +
                         "\tavailable output argument: list, graph\n";
             }
-            if (outputArg.equals("list") && !(cdxArgs.length == 1)) {
+            if (outputValue.equals("list") && cdxValues.length > 1) {
                 return "output_arg error: for output argument 'list' you can use only one currency\n";
             }
         }

@@ -1,15 +1,13 @@
 package com.github.fridmor.enumeration;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
+@Getter
 public enum PeriodEnum {
     WEEK(7),
     MONTH(30);
 
-    @Getter
     private final int days;
-
-    private PeriodEnum(int days) {
-        this.days = days;
-    }
 }
