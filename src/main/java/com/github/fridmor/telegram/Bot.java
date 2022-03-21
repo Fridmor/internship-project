@@ -51,7 +51,7 @@ public class Bot extends TelegramLongPollingBot {
         try {
             CommandHandler commandHandler = new CommandHandler(message.getText());
             CommandExecutor commandExecutor = new CommandExecutor(commandHandler);
-            if (commandHandler.getOutputValue().equals("graph")) {
+            if (message.getText().contains("graph")) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setChatId(message.getChatId().toString());
                 sendPhoto.setPhoto(new InputFile(commandExecutor.commandExecuteWithGraphReturn()));

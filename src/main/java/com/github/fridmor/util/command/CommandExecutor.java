@@ -30,29 +30,42 @@ public class CommandExecutor {
     private static final String OUTPUT_GRAPH = "graph";
     private static final String FILE_NAME = "graph.png";
 
+    private static final int ARG_IDX = 0;
+    private static final int VAL_IDX = 1;
+
     private final String[] cdxArg;
-    private final String periodCmd;
+    private final String dateArg;
+    private final String dateValue;
     private final String periodArg;
-    private final String algArg;
-    private final String outputArg;
+    private final String periodValue;
+    private final String algValue;
+    private final String outputValue;
 
     public CommandExecutor(CommandHandler commandHandler) {
-        cdxArg = commandHandler.getCdxValues();
-        periodCmd = commandHandler.getPeriodArg();
-        periodArg = commandHandler.getPeriodValue();
-        algArg = commandHandler.getAlgValue();
-        outputArg = commandHandler.getOutputValue();
+        cdxArg = commandHandler.getCdx_values();
+        dateArg = commandHandler.getDate_option() != null ?
+                commandHandler.getDate_option()[ARG_IDX] : "";
+        dateValue = commandHandler.getDate_option() != null ?
+                commandHandler.getDate_option()[VAL_IDX] : "";
+        periodArg = commandHandler.getPeriod_option() != null ?
+                commandHandler.getPeriod_option()[ARG_IDX] : "";
+        periodValue = commandHandler.getPeriod_option() != null ?
+                commandHandler.getPeriod_option()[VAL_IDX] : "";
+        algValue = commandHandler.getAlgorithm_option() != null ?
+                commandHandler.getAlgorithm_option()[VAL_IDX] : "";
+        outputValue = commandHandler.getOutput_option() != null ?
+                commandHandler.getOutput_option()[VAL_IDX] : "";
     }
 
     public String commandExecuteWithTextReturn() throws FileNotFoundException {
         List<List<Rate>> rateListList = getRateList(cdxArg);
-        Algorithm algorithm = getAlgorithm(algArg);
+        Algorithm algorithm = getAlgorithm(algValue);
 
-        if (periodCmd.equals(DATE_CMD)) {
-            LocalDate date = getDate(periodArg);
+        if (dateArg.equals(DATE_CMD)) {
+            LocalDate date = getDate(dateValue);
             return outputList(rateListList, algorithm, date);
-        } else if (periodCmd.equals(PERIOD_CMD) && outputArg.equals(OUTPUT_LIST)) {
-            PeriodEnum period = getPeriod(periodArg);
+        } else if (periodArg.equals(PERIOD_CMD) && outputValue.equals(OUTPUT_LIST)) {
+            PeriodEnum period = getPeriod(periodValue);
             return outputList(rateListList, algorithm, period);
         } else {
             throw new IllegalArgumentException();
@@ -61,10 +74,10 @@ public class CommandExecutor {
 
     public File commandExecuteWithGraphReturn() throws PythonExecutionException, IOException {
         List<List<Rate>> rateListList = getRateList(cdxArg);
-        Algorithm algorithm = getAlgorithm(algArg);
+        Algorithm algorithm = getAlgorithm(algValue);
 
-        if (periodCmd.equals(PERIOD_CMD) && outputArg.equals(OUTPUT_GRAPH)) {
-            PeriodEnum period = getPeriod(periodArg);
+        if (periodArg.equals(PERIOD_CMD) && outputValue.equals(OUTPUT_GRAPH)) {
+            PeriodEnum period = getPeriod(periodValue);
             return outputGraph(rateListList, algorithm, period);
         } else {
             throw new IllegalArgumentException();

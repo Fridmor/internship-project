@@ -1,175 +1,208 @@
 package com.github.fridmor.util.command;
 
-import com.github.fridmor.enumeration.AlgorithmEnum;
 import com.github.fridmor.enumeration.CdxEnum;
+import com.github.fridmor.enumeration.CmdOptionEnum;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+@Getter
 public class CommandHandler {
-    private static final String PATTERN_WITH_DATE = "rate <cdx_arg> -date <date_arg> -alg <alg_arg>";
-    private static final String PATTERN_WITH_PERIOD = "rate <cdx_arg> -period <period_arg> -alg <alg_arg> -output <output_arg>";
-    private static final String EXAMPLE_WITH_DATE_TOMORROW = "rate USD -date tomorrow -alg actual";
-    private static final String EXAMPLE_WITH_DATE_SPECIFIC_DATE = "rate TRY -date 22.02.2030 -alg moon";
-    private static final String EXAMPLE_WITH_PERIOD_WEEK_LIST = "rate EUR -period week -alg linear -output list";
-    private static final String EXAMPLE_WITH_PERIOD_MONTH_GRAPH = "rate BGN,AMD -period month -alg moon -output graph";
+    @Getter(AccessLevel.NONE)
+    private static final Pattern CDX_PATTERN = Pattern.compile("\\s+[A-Z]+(,[A-Z]+)*");
+    @Getter(AccessLevel.NONE)
+    private static final Pattern OPTION_PATTERN = Pattern.compile("\\s+(-[a-z]+)\\s+([a-z]+|\\d{2}\\.\\d{2}\\.\\d{4})");
+    @Getter(AccessLevel.NONE)
+    private static Matcher matcher;
 
-    private static final int DEFAULT_CMD_SIZE = 6;
-    private static final int EXTENDED_CMD_SIZE = 8;
+    private String cmd;
+    private final String main_cmd;
+    private final String[] cdx_values;
+    private final String[] date_option;
+    private final String[] period_option;
+    private final String[] algorithm_option;
+    private final String[] output_option;
 
-    private static final int MAIN_CMD_IDX = 0;
-    private static final int CDX_VALUES_IDX = 1;
-    private static final int PERIOD_ARG_IDX = 2;
-    private static final int PERIOD_VALUE_IDX = 3;
-    private static final int ALGORITHM_ARG_IDX = 4;
-    private static final int ALGORITHM_VALUE_IDX = 5;
-    private static final int OUTPUT_ARG_IDX = 6;
-    private static final int OUTPUT_VALUE_IDX = 7;
+    public CommandHandler(String input_cmd) {
+        cmd = input_cmd;
+        main_cmd = setMainCmd(input_cmd);
+        cdx_values = setCdxValues(input_cmd);
+        Map<String, String> cmdOptionMap = getCmdOptions(input_cmd);
 
-    private final String[] cmdArgs;
-    private String mainCmd;
-    @Getter private String[] cdxValues;
-    @Getter private String periodArg;
-    @Getter private String periodValue;
-    private String algArg;
-    @Getter private String algValue;
-    private String outputArg;
-    @Getter private String outputValue;
+        date_option = setDateOption(cmdOptionMap);
+        period_option = setPeriodOption(cmdOptionMap);
+        algorithm_option = setAlgOption(cmdOptionMap);
+        output_option = setOutputOption(cmdOptionMap);
 
-    public CommandHandler(String command) {
-        cmdArgs = command.trim().split("\\s+");
-        getErrorIfCommandInvalid();
-    }
-
-    private void getErrorIfCommandInvalid() {
-        String errorDefault = "the command must match the pattern:";
-        String errorDate = "" +
-                " pattern using -date command:\n" +
-                "  " + PATTERN_WITH_DATE + "\n" +
-                "   examples:\n" +
-                "    " + EXAMPLE_WITH_DATE_TOMORROW + "\n" +
-                "    " + EXAMPLE_WITH_DATE_SPECIFIC_DATE;
-        String errorPeriod = "" +
-                " pattern using -period command:\n" +
-                "  " + PATTERN_WITH_PERIOD + "\n" +
-                "   examples:\n" +
-                "    " + EXAMPLE_WITH_PERIOD_WEEK_LIST + "\n" +
-                "    " + EXAMPLE_WITH_PERIOD_MONTH_GRAPH;
-
-        if (cmdArgs.length != DEFAULT_CMD_SIZE && cmdArgs.length != EXTENDED_CMD_SIZE) {
-            throw new IllegalArgumentException(errorDefault + "\n" + errorDate + "\n" + errorPeriod);
-        }
-
-        mainCmd = cmdArgs[MAIN_CMD_IDX];
-        cdxValues = cmdArgs[CDX_VALUES_IDX].split(",");
-        periodArg = cmdArgs[PERIOD_ARG_IDX];
-        periodValue = cmdArgs[PERIOD_VALUE_IDX];
-        algArg = cmdArgs[ALGORITHM_ARG_IDX];
-        algValue = cmdArgs[ALGORITHM_VALUE_IDX];
-        outputArg = cmdArgs.length == EXTENDED_CMD_SIZE ? cmdArgs[OUTPUT_ARG_IDX] : "";
-        outputValue = cmdArgs.length == EXTENDED_CMD_SIZE ? cmdArgs[OUTPUT_VALUE_IDX] : "";
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(getErrorIfMainCmdInvalid());
-        sb.append(getErrorIfCdxArgsInvalid());
-        sb.append(getErrorIfPeriodCmdInvalid());
-        sb.append(getErrorIfPeriodArgInvalid());
-        sb.append(getErrorIfAlgCmdInvalid());
-        sb.append(getErrorIfAlgArgInvalid());
-        sb.append(getErrorIfOutputCmdInvalid());
-        sb.append(getErrorIfOutputArgInvalid());
-
-        if (!sb.toString().isEmpty()) {
-            throw new IllegalArgumentException(sb.toString());
+        if (!this.cmd.isBlank()) {
+            throw new IllegalArgumentException(String.format(
+                    "%s arguments not used in the calculation, please correct the command or write a new one", cmd));
         }
     }
 
-    private String getErrorIfMainCmdInvalid() {
-        if (!mainCmd.equals("rate")) {
-            return "rate command error: must be rate\n";
+    private String setMainCmd(String cmd) {
+        if (cmd.startsWith(CmdOptionEnum.MAIN.getArg())) {
+            this.cmd = this.cmd.replaceFirst(CmdOptionEnum.MAIN.getArg(), "");
+            return CmdOptionEnum.MAIN.getArg();
+        } else {
+            throw new IllegalArgumentException(String.format(
+                    "command must start with %s", CmdOptionEnum.MAIN.getArg()));
         }
-        return "";
     }
 
-    private String getErrorIfCdxArgsInvalid() {
-        if (cmdArgs.length == DEFAULT_CMD_SIZE && !(cdxValues.length == 1)) {
-            return "cdx_arg error: for pattern using -date you can use only one currency\n";
+    private String[] setCdxValues(String cmd) {
+        matcher = CDX_PATTERN.matcher(cmd);
+        if (matcher.find()) {
+            String[] cdxValues = matcher.group().trim().split(",");
+            this.cmd = this.cmd.replaceFirst(matcher.group().trim(), "");
+            Set<String> cdxSet = new HashSet<>();
+            for (String cdx : cdxValues) {
+                if (Arrays.stream(CdxEnum.values()).noneMatch(e -> e.name().equals(cdx))) {
+                    throw new IllegalArgumentException(String.format(
+                            "invalid currency %s. available currencies: AMD,BGN,EUR,TRY,USD", cdx));
+                } else if (!cdxSet.add(cdx)) {
+                    throw new IllegalArgumentException(String.format("can't use same currency twice -> %s", cdx));
+                }
+            }
+            return cdxValues;
+        } else {
+            throw new IllegalArgumentException(
+                    "can't find cdx pattern. make sure currencies are listed separated by ',' without spaces");
         }
-        Set<String> cdxSet = new HashSet<>();
-        for (String cdx : cdxValues) {
-            if (Arrays.stream(CdxEnum.values()).noneMatch(e -> e.name().equals(cdx))) {
-                return "cdx_arg error: wrong currency name\n" +
-                        "\tavailable currencies: AMD,BGN,EUR,TRY,USD\n";
-            } else if (!cdxSet.add(cdx)) {
-                return "cdx_arg error: currencies must be unique\n";
+    }
+
+    private Map<String, String> getCmdOptions(String cmd) {
+        matcher = OPTION_PATTERN.matcher(cmd);
+        Map<String, String> cmdOptionMap = new HashMap<>();
+        while (matcher.find()) {
+            if (Arrays.stream(CmdOptionEnum.values()).anyMatch(e -> e.getArg().equals(matcher.group(1)))) {
+                if (!cmdOptionMap.containsKey(matcher.group(1))) {
+                    cmdOptionMap.put(matcher.group(1), matcher.group(2));
+                    this.cmd = this.cmd.replaceFirst(matcher.group().trim(), "");
+                } else {
+                    throw new IllegalArgumentException(String.format(
+                            "can't use same argument twice -> %s", matcher.group(1)));
+                }
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "invalid %s argument. available arguments: -date, -period, -alg, -output", matcher.group(1)));
             }
         }
-        return "";
+        if (cmdOptionMap.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "can't find option pattern. " +
+                            "make sure the option argument starts with '-' " +
+                            "and the option value is specified");
+        } else {
+            return cmdOptionMap;
+        }
     }
 
-    private String getErrorIfPeriodCmdInvalid() {
-        if (cmdArgs.length == DEFAULT_CMD_SIZE && !periodArg.equals("-date")) {
-            return "-date command error: wrong period command for pattern using -date\n";
-        }
-        if (cmdArgs.length == EXTENDED_CMD_SIZE && !periodArg.equals("-period")) {
-            return "-period command error: wrong period command for pattern using -period\n";
-        }
-        return "";
-    }
-
-    private String getErrorIfPeriodArgInvalid() {
-        if (cmdArgs.length == DEFAULT_CMD_SIZE && !periodValue.equals("tomorrow")) {
-            try {
-                LocalDate.parse(periodValue, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-            } catch (DateTimeParseException e) {
-                return "date_arg error: wrong date argument for pattern using -date\n" +
-                        "\tavailable date argument: tomorrow, date in format dd.MM.yyyy\n";
+    private String[] setDateOption(Map<String, String> cmdOptionMap) {
+        if (cmdOptionMap.containsKey(CmdOptionEnum.DATE.getArg())) {
+            if (cdx_values.length > 1) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option with multiple currencies", CmdOptionEnum.DATE.name()));
             }
-        }
-        if (cmdArgs.length == EXTENDED_CMD_SIZE && !periodValue.matches("week|month")) {
-            return "period_arg error: wrong period argument for pattern using -period\n" +
-                    "\tavailable period argument: week, month\n";
-        }
-        return "";
-    }
-
-    private String getErrorIfAlgCmdInvalid() {
-        if (!algArg.equals("-alg")) {
-            return "-alg command error: must be -alg\n";
-        }
-        return "";
-    }
-
-    private String getErrorIfAlgArgInvalid() {
-        if (Arrays.stream(AlgorithmEnum.values()).noneMatch(e -> e.name().equals(algValue.toUpperCase()))) {
-            return "alg_arg error: wrong algorithm name\n" +
-                    "\tavailable algorithms: actual, moon, linear\n";
-        }
-        return "";
-    }
-
-    private String getErrorIfOutputCmdInvalid() {
-        if (cmdArgs.length == EXTENDED_CMD_SIZE && !outputArg.equals("-output")) {
-            return "-output command error: must be -output\n";
-        }
-        return "";
-    }
-
-    private String getErrorIfOutputArgInvalid() {
-        if (cmdArgs.length == EXTENDED_CMD_SIZE) {
-            if (!outputValue.matches("list|graph")) {
-                return "output_arg error: wrong output argument\n" +
-                        "\tavailable output argument: list, graph\n";
+            if (cmdOptionMap.containsKey(CmdOptionEnum.PERIOD.getArg())) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option with %s option",
+                        CmdOptionEnum.DATE.name(), CmdOptionEnum.PERIOD.name()));
             }
-            if (outputValue.equals("list") && cdxValues.length > 1) {
-                return "output_arg error: for output argument 'list' you can use only one currency\n";
+            if (cmdOptionMap.containsKey(CmdOptionEnum.OUTPUT.getArg())) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option with %s option",
+                        CmdOptionEnum.DATE.name(), CmdOptionEnum.OUTPUT.name()));
             }
+            String dateValue = cmdOptionMap.get(CmdOptionEnum.DATE.getArg());
+            if (Arrays.asList(CmdOptionEnum.DATE.getValues()).contains(dateValue)) {
+                return new String[]{CmdOptionEnum.DATE.getArg(), dateValue};
+            } else {
+                try {
+                    LocalDate.parse(dateValue, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+                    return new String[]{CmdOptionEnum.DATE.getArg(), dateValue};
+                } catch (DateTimeParseException e) {
+                    throw new IllegalArgumentException(String.format(
+                            "invalid date option value -> %s", dateValue));
+                }
+            }
+        } else {
+            return null;
         }
-        return "";
+    }
+
+    private String[] setPeriodOption(Map<String, String> cmdOptionMap) {
+        if (cmdOptionMap.containsKey(CmdOptionEnum.PERIOD.getArg())) {
+            if (cmdOptionMap.containsKey(CmdOptionEnum.DATE.getArg())) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option with %s option",
+                        CmdOptionEnum.PERIOD.name(), CmdOptionEnum.DATE.name()));
+            }
+            if (!cmdOptionMap.containsKey(CmdOptionEnum.OUTPUT.getArg())) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option without %s option",
+                        CmdOptionEnum.PERIOD.name(), CmdOptionEnum.OUTPUT.name()));
+            }
+            String periodValue = cmdOptionMap.get(CmdOptionEnum.PERIOD.getArg());
+            if (Arrays.asList(CmdOptionEnum.PERIOD.getValues()).contains(periodValue)) {
+                return new String[]{CmdOptionEnum.PERIOD.getArg(), periodValue};
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "invalid period option value -> %s", periodValue));
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private String[] setAlgOption(Map<String, String> cmdOptionMap) {
+        if (cmdOptionMap.containsKey(CmdOptionEnum.ALGORITHM.getArg())) {
+            String algValue = cmdOptionMap.get(CmdOptionEnum.ALGORITHM.getArg());
+            if (Arrays.asList(CmdOptionEnum.ALGORITHM.getValues()).contains(algValue)) {
+                return new String[]{CmdOptionEnum.ALGORITHM.getArg(),
+                        cmdOptionMap.get(CmdOptionEnum.ALGORITHM.getArg())};
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "invalid algorithm option value -> %s", algValue));
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private String[] setOutputOption(Map<String, String> cmdOptionMap) {
+        if (cmdOptionMap.containsKey(CmdOptionEnum.OUTPUT.getArg())) {
+            if (cmdOptionMap.containsKey(CmdOptionEnum.DATE.getArg())) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option with %s option",
+                        CmdOptionEnum.OUTPUT.name(), CmdOptionEnum.DATE.name()));
+            }
+            if (!cmdOptionMap.containsKey(CmdOptionEnum.PERIOD.getArg())) {
+                throw new IllegalArgumentException(String.format(
+                        "can't use %s option without %s option",
+                        CmdOptionEnum.OUTPUT.name(), CmdOptionEnum.PERIOD.name()));
+            }
+            String outputValue = cmdOptionMap.get(CmdOptionEnum.OUTPUT.getArg());
+            if (Arrays.asList(CmdOptionEnum.OUTPUT.getValues()).contains(outputValue)) {
+                if (outputValue.equals("list") && cdx_values.length > 1) {
+                    throw new IllegalArgumentException(String.format(
+                            "can't use %s option %s value with multiple currencies",
+                            CmdOptionEnum.OUTPUT.name(), outputValue));
+                } else {
+                    return new String[]{CmdOptionEnum.OUTPUT.getArg(), outputValue};
+                }
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "invalid output option value -> %s", outputValue));
+            }
+        } else {
+            return null;
+        }
     }
 }
