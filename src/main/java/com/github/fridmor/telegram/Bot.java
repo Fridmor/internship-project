@@ -1,9 +1,10 @@
 package com.github.fridmor.telegram;
 
+import com.github.fridmor.BotApp;
 import com.github.fridmor.util.command.CommandExecutor;
 import com.github.fridmor.util.command.CommandHandler;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -15,13 +16,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 
-@Slf4j(topic = "logback.debug")
-@AllArgsConstructor
+@Slf4j(topic = "logback")
+@RequiredArgsConstructor
 public class Bot extends TelegramLongPollingBot {
     private final String BOT_NAME;
     private final String BOT_TOKEN;
 
-    private final String GRAPH_COMMAND = "graph";
+    private static final String GRAPH_COMMAND = "graph";
 
     @Override
     public String getBotUsername() {
@@ -43,7 +44,7 @@ public class Bot extends TelegramLongPollingBot {
                     }
                 }
             } catch (Exception e) {
-                log.error(e.getMessage());
+                log.debug("debug log from {}: {}", Bot.class.getSimpleName(), e.getMessage());
             }
     }
 
@@ -63,6 +64,7 @@ public class Bot extends TelegramLongPollingBot {
                 execute(sendMessage);
             }
         } catch (IllegalArgumentException e) {
+            log.info("info log from {}: {}", BotApp.class.getSimpleName(), e.getMessage());
             sendMessage.setText(e.getMessage());
             execute(sendMessage);
         }

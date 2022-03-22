@@ -6,7 +6,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-@Slf4j(topic = "logback.debug")
+@Slf4j(topic = "logback")
 public class BotApp {
     private static final String BOT_NAME = System.getenv("BOT_NAME");
     private static final String BOT_TOKEN = System.getenv("BOT_TOKEN");
@@ -16,7 +16,7 @@ public class BotApp {
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
             botsApi.registerBot(new Bot(BOT_NAME, BOT_TOKEN));
         } catch (TelegramApiException e) {
-            log.error(e.getMessage());
+            log.debug("debug log from {}: {}", BotApp.class.getSimpleName(), e.getMessage());
         }
     }
 }

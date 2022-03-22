@@ -4,6 +4,7 @@ import com.github.fridmor.enumeration.CdxEnum;
 import com.github.fridmor.enumeration.CmdOptionEnum;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j(topic = "logback")
 @Getter
 public class CommandHandler {
     @Getter(AccessLevel.NONE)
@@ -41,8 +43,11 @@ public class CommandHandler {
         outputOption = setOutputOption(cmdOptionMap);
 
         if (!this.cmd.isBlank()) {
+            log.info("info log from {}: input command contains errors", CommandHandler.class.getSimpleName());
             throw new IllegalArgumentException(String.format(
                     "%s arguments not used in the calculation, please correct the command or write a new one", cmd));
+        } else {
+            log.info("info log from {}: input command is valid", CommandHandler.class.getSimpleName());
         }
     }
 
