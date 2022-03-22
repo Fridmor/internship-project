@@ -28,10 +28,10 @@ public class CsvReader {
                 new InputStreamReader((Objects.requireNonNull(
                         CsvReader.class.getClassLoader().getResourceAsStream(fileName)))))) {
             String line;
-            String[] headlines = br.readLine().split(SEMICOLON_DELIMITER);
+            List<String> headlinesList = List.of(br.readLine().split(SEMICOLON_DELIMITER));
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(SEMICOLON_DELIMITER);
-                rateList.add(parseValues(headlines, values));
+                rateList.add(parseValues(headlinesList, values));
             }
         } catch (IOException e) {
             throw new FileNotFoundException(String.format("file named %s in resources folder not found", fileName));
@@ -39,54 +39,22 @@ public class CsvReader {
         return rateList;
     }
 
-    private static Rate parseValues(String[] headlines, String[] values) {
-        if (!csvFileDataIsValid(headlines)) {
+    private static Rate parseValues(List<String> headlinesList, String[] values) {
+        if (!csvFileDataIsValid(headlinesList)) {
             throw new IllegalArgumentException("csv file data is not enough");
         }
-        int nominalHeadlineIdx = 0;
-        int dataHeadlineIdx = 0;
-        int cursHeadlineIdx = 0;
-        int cdxHeadlineIdx = 0;
-        for (int i = 0; i < headlines.length; i++) {
-            if (headlines[i].equals(NOMINAL_HEADLINE)) {
-                nominalHeadlineIdx = i;
-            }if (headlines[i].equals(DATA_HEADLINE)) {
-                dataHeadlineIdx = i;
-            }if (headlines[i].equals(CURS_HEADLINE)) {
-                cursHeadlineIdx = i;
-            }if (headlines[i].equals(CDX_HEADLINE)) {
-                cdxHeadlineIdx = i;
-            }
-        }
-        int nominal = Integer.parseInt(values[nominalHeadlineIdx]
+        int nominal = Integer.parseInt(values[headlinesList.indexOf(NOMINAL_HEADLINE)]
                 .replace(".", ""));
-        LocalDate date = LocalDate.parse(values[dataHeadlineIdx], DATE_FORMAT);
-        BigDecimal curs = new BigDecimal(values[cursHeadlineIdx]
+        LocalDate date = LocalDate.parse(values[headlinesList.indexOf(DATA_HEADLINE)], DATE_FORMAT);
+        BigDecimal curs = new BigDecimal(values[headlinesList.indexOf(CURS_HEADLINE)]
                 .replace(",", ".")
                 .replace("\"", ""));
-        String cdx = values[cdxHeadlineIdx];
+        String cdx = values[headlinesList.indexOf(CDX_HEADLINE)];
         return new Rate(nominal, date, curs, cdx);
     }
 
-    private static boolean csvFileDataIsValid(String[] headlines) {
-        boolean nominalHeadlineExist = false;
-        boolean dataHeadlineExist = false;
-        boolean cursHeadlineExist = false;
-        boolean cdxHeadlineExist = false;
-        for (String headline : headlines) {
-            if (headline.equals(NOMINAL_HEADLINE)) {
-                nominalHeadlineExist = true;
-            }
-            if (headline.equals(DATA_HEADLINE)) {
-                dataHeadlineExist = true;
-            }
-            if (headline.equals(CURS_HEADLINE)) {
-                cursHeadlineExist = true;
-            }
-            if (headline.equals(CDX_HEADLINE)) {
-                cdxHeadlineExist = true;
-            }
-        }
-        return nominalHeadlineExist && dataHeadlineExist && cursHeadlineExist && cdxHeadlineExist;
+    private static boolean csvFileDataIsValid(List<String> headlinesList) {
+        return headlinesList.contains(NOMINAL_HEADLINE) && headlinesList.contains(DATA_HEADLINE) &&
+                headlinesList.contains(CURS_HEADLINE) && headlinesList.contains(CDX_HEADLINE);
     }
 }

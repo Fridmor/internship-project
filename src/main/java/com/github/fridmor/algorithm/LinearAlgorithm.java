@@ -1,9 +1,7 @@
 package com.github.fridmor.algorithm;
 
-import com.github.fridmor.enumeration.PeriodEnum;
 import com.github.fridmor.model.Rate;
 import com.github.fridmor.util.LinearRegression;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,8 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-@NoArgsConstructor
-public class LinearAlgorithm extends Algorithm {
+public class LinearAlgorithm implements Algorithm {
     private static final int DAYS_AMOUNT_TO_ITERATE = 30;
 
     @Override
@@ -36,15 +33,6 @@ public class LinearAlgorithm extends Algorithm {
             i++;
         }
         return lastRate;
-    }
-
-    @Override
-    public List<Rate> calculateRateListForPeriod(List<Rate> rateList, PeriodEnum period) {
-        List<Rate> rateListForPeriod = new ArrayList<>();
-        for (int i = 0; i < period.getDays(); i++) {
-            rateListForPeriod.add(calculateRateForDate(rateList, LocalDate.now().plusDays(i + 1)));
-        }
-        return rateListForPeriod;
     }
 
     private List<Rate> getRateListForLastMonth(List<Rate> rateList) {

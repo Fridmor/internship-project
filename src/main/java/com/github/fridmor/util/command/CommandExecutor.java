@@ -42,19 +42,19 @@ public class CommandExecutor {
     private final String outputValue;
 
     public CommandExecutor(CommandHandler commandHandler) {
-        cdxArg = commandHandler.getCdx_values();
-        dateArg = commandHandler.getDate_option() != null ?
-                commandHandler.getDate_option()[ARG_IDX] : "";
-        dateValue = commandHandler.getDate_option() != null ?
-                commandHandler.getDate_option()[VAL_IDX] : "";
-        periodArg = commandHandler.getPeriod_option() != null ?
-                commandHandler.getPeriod_option()[ARG_IDX] : "";
-        periodValue = commandHandler.getPeriod_option() != null ?
-                commandHandler.getPeriod_option()[VAL_IDX] : "";
-        algValue = commandHandler.getAlgorithm_option() != null ?
-                commandHandler.getAlgorithm_option()[VAL_IDX] : "";
-        outputValue = commandHandler.getOutput_option() != null ?
-                commandHandler.getOutput_option()[VAL_IDX] : "";
+        cdxArg = commandHandler.getCdxValues();
+        dateArg = commandHandler.getDateOption() != null ?
+                commandHandler.getDateOption()[ARG_IDX] : "";
+        dateValue = commandHandler.getDateOption() != null ?
+                commandHandler.getDateOption()[VAL_IDX] : "";
+        periodArg = commandHandler.getPeriodOption() != null ?
+                commandHandler.getPeriodOption()[ARG_IDX] : "";
+        periodValue = commandHandler.getPeriodOption() != null ?
+                commandHandler.getPeriodOption()[VAL_IDX] : "";
+        algValue = commandHandler.getAlgorithmOption() != null ?
+                commandHandler.getAlgorithmOption()[VAL_IDX] : "";
+        outputValue = commandHandler.getOutputOption() != null ?
+                commandHandler.getOutputOption()[VAL_IDX] : "";
     }
 
     public String commandExecuteWithTextReturn() throws FileNotFoundException {

@@ -4,10 +4,10 @@ import com.github.fridmor.algorithm.ActualAlgorithm;
 import com.github.fridmor.algorithm.Algorithm;
 import com.github.fridmor.algorithm.LinearAlgorithm;
 import com.github.fridmor.algorithm.MoonAlgorithm;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Getter
 public enum AlgorithmEnum {
     ACTUAL(new ActualAlgorithm()),

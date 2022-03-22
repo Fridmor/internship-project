@@ -22,23 +22,23 @@ public class CommandHandler {
     private static Matcher matcher;
 
     private String cmd;
-    private final String main_cmd;
-    private final String[] cdx_values;
-    private final String[] date_option;
-    private final String[] period_option;
-    private final String[] algorithm_option;
-    private final String[] output_option;
+    private final String mainCmd;
+    private final String[] cdxValues;
+    private final String[] dateOption;
+    private final String[] periodOption;
+    private final String[] algorithmOption;
+    private final String[] outputOption;
 
-    public CommandHandler(String input_cmd) {
-        cmd = input_cmd;
-        main_cmd = setMainCmd(input_cmd);
-        cdx_values = setCdxValues(input_cmd);
-        Map<String, String> cmdOptionMap = getCmdOptions(input_cmd);
+    public CommandHandler(String inputCmd) {
+        cmd = inputCmd;
+        mainCmd = setMainCmd(inputCmd);
+        cdxValues = setCdxValues(inputCmd);
+        Map<String, String> cmdOptionMap = getCmdOptions(inputCmd);
 
-        date_option = setDateOption(cmdOptionMap);
-        period_option = setPeriodOption(cmdOptionMap);
-        algorithm_option = setAlgOption(cmdOptionMap);
-        output_option = setOutputOption(cmdOptionMap);
+        dateOption = setDateOption(cmdOptionMap);
+        periodOption = setPeriodOption(cmdOptionMap);
+        algorithmOption = setAlgOption(cmdOptionMap);
+        outputOption = setOutputOption(cmdOptionMap);
 
         if (!this.cmd.isBlank()) {
             throw new IllegalArgumentException(String.format(
@@ -106,7 +106,7 @@ public class CommandHandler {
 
     private String[] setDateOption(Map<String, String> cmdOptionMap) {
         if (cmdOptionMap.containsKey(CmdOptionEnum.DATE.getArg())) {
-            if (cdx_values.length > 1) {
+            if (cdxValues.length > 1) {
                 throw new IllegalArgumentException(String.format(
                         "can't use %s option with multiple currencies", CmdOptionEnum.DATE.name()));
             }
@@ -190,7 +190,7 @@ public class CommandHandler {
             }
             String outputValue = cmdOptionMap.get(CmdOptionEnum.OUTPUT.getArg());
             if (Arrays.asList(CmdOptionEnum.OUTPUT.getValues()).contains(outputValue)) {
-                if (outputValue.equals("list") && cdx_values.length > 1) {
+                if (outputValue.equals("list") && cdxValues.length > 1) {
                     throw new IllegalArgumentException(String.format(
                             "can't use %s option %s value with multiple currencies",
                             CmdOptionEnum.OUTPUT.name(), outputValue));

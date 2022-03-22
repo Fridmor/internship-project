@@ -4,15 +4,24 @@ import com.github.fridmor.enumeration.PeriodEnum;
 import com.github.fridmor.model.Rate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public abstract class Algorithm {
-    public abstract Rate calculateRateForDate(List<Rate> rateList, LocalDate date);
+public interface Algorithm {
+    Rate calculateRateForDate(List<Rate> rateList, LocalDate date);
 
-    public abstract List<Rate> calculateRateListForPeriod(List<Rate> rateList, PeriodEnum period);
+    default List<Rate> calculateRateListForPeriod(List<Rate> rateList, PeriodEnum period) {
+        List<Rate> rateListForPeriod = new ArrayList<>();
+        for (int i = 0; i < period.getDays(); i++) {
+            rateListForPeriod.add(calculateRateForDate(rateList, LocalDate.now().plusDays(i + 1)));
+        }
+        return rateListForPeriod;
+    }
 
-    Rate getLastRate(List<Rate> rateList) {
-        return rateList.stream().max(Comparator.comparing(Rate::getDate)).orElseThrow();
+    default Rate getLastRate(List<Rate> rateList) {
+        return rateList.stream()
+                .max(Comparator.comparing(Rate::getDate))
+                .orElseThrow();
     }
 }

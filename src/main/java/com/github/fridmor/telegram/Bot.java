@@ -21,6 +21,8 @@ public class Bot extends TelegramLongPollingBot {
     private final String BOT_NAME;
     private final String BOT_TOKEN;
 
+    private final String GRAPH_COMMAND = "graph";
+
     @Override
     public String getBotUsername() {
         return BOT_NAME;
@@ -51,7 +53,7 @@ public class Bot extends TelegramLongPollingBot {
         try {
             CommandHandler commandHandler = new CommandHandler(message.getText());
             CommandExecutor commandExecutor = new CommandExecutor(commandHandler);
-            if (message.getText().contains("graph")) {
+            if (message.getText().contains(GRAPH_COMMAND)) {
                 SendPhoto sendPhoto = new SendPhoto();
                 sendPhoto.setChatId(message.getChatId().toString());
                 sendPhoto.setPhoto(new InputFile(commandExecutor.commandExecuteWithGraphReturn()));
