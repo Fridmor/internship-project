@@ -8,66 +8,39 @@
     <artifactId>internship-project</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <properties>
-        <java.version>11</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <telegram.version>5.7.1</telegram.version>
-        <org.projectlombok.version>1.18.22</org.projectlombok.version>
-        <com.github.sh0nk.version>0.5.0</com.github.sh0nk.version>
-        <ch.qos.logback.version>1.2.11</ch.qos.logback.version>
-        <org.apache.maven.plugins.version>2.4.1</org.apache.maven.plugins.version>
-        <org.apache.maven.plugins.version>2.4.1</org.apache.maven.plugins.version>
-
-    </properties>
-
     <dependencies>
-        <!-- Telegram API -->
         <dependency>
-            <groupId>org.telegram</groupId>
-            <artifactId>telegrambots</artifactId>
-            <version>${telegram.version}</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.telegram</groupId>
-            <artifactId>telegrambotsextensions</artifactId>
-            <version>${telegram.version}</version>
-        </dependency>
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${org.projectlombok.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <!-- Matplotlib -->
-        <dependency>
-            <groupId>com.github.sh0nk</groupId>
-            <artifactId>matplotlib4j</artifactId>
-            <version>${com.github.sh0nk.version}</version>
-        </dependency>
-        <!-- Logback -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${ch.qos.logback.version}</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.8.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>${org.apache.maven.plugins.version}</version>
+                <version>2.4.1</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.github.fridmor.BotApp</mainClass>
+                            <mainClass>homework.App</mainClass>
                         </manifest>
                     </archive>
                     <!--Ignoring postfix jar-with-dependencies-->
