@@ -18,7 +18,6 @@
         <com.github.sh0nk.version>0.5.0</com.github.sh0nk.version>
         <ch.qos.logback.version>1.2.11</ch.qos.logback.version>
         <org.apache.maven.plugins.version>2.4.1</org.apache.maven.plugins.version>
-        <org.apache.maven.plugins.version>2.4.1</org.apache.maven.plugins.version>
 
     </properties>
 
