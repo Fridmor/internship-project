@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class MoonAlgorithm implements Algorithm {
 
@@ -50,17 +51,17 @@ public class MoonAlgorithm implements Algorithm {
     }
 
     private BigDecimal getAvgCurs(List<Rate> rateList, List<LocalDate> fullMoonDateList, LocalDate date) {
-        List<BigDecimal> cursList = new ArrayList<>();
-        fullMoonDateList.stream()
+        List<BigDecimal> cursList = fullMoonDateList.stream()
                 .filter(d -> d.isBefore(date))
                 .sorted(Comparator.reverseOrder())
                 .limit(3)
-                .forEach(ld -> cursList.add(
-                        rateList.stream()
-                                .filter(r -> !r.getDate().isAfter(ld))
-                                .max(Comparator.comparing(Rate::getDate))
-                                .orElseThrow()
-                                .getCurs()));
+                .map(d -> rateList.stream()
+                        .filter(r -> !r.getDate().isAfter(d))
+                        .max(Comparator.comparing(Rate::getDate))
+                        .orElseThrow()
+                        .getCurs())
+                .collect(Collectors.toList());
+
         BigDecimal divisor = new BigDecimal(cursList.size());
         return cursList.stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
